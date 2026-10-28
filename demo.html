@@ -1,0 +1,562 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+  <title>EdgePay — Live Demo</title>
+  <style>
+    :root{
+      --orange:#f97316;--od:#ea580c;--ol:#ffedd5;--om:#fed7aa;
+      --white:#fff;--bg:#fafafa;
+      --text:#111;--sub:#555;--muted:#999;--border:#eeeeee;
+      --green:#16a34a;
+    }
+    *{margin:0;padding:0;box-sizing:border-box;}
+    html,body{height:100%;overflow:hidden;}
+    body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(--text);display:flex;flex-direction:column;}
+
+    /* NAV */
+    nav{
+      height:56px;padding:0 32px;
+      display:flex;align-items:center;justify-content:space-between;
+      background:var(--white);border-bottom:1px solid var(--border);
+      flex-shrink:0;
+    }
+    .nav-logo{display:flex;align-items:center;gap:9px;text-decoration:none;}
+    .nl-icon{width:28px;height:28px;border-radius:7px;background:var(--orange);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:900;color:#fff;overflow:hidden;}
+    .nl-icon img{width:100%;height:100%;object-fit:cover;border-radius:7px;}
+    .nl-name{font-weight:800;color:var(--text);font-size:.95rem;}
+    .demo-tag{background:var(--ol);border:1px solid var(--om);color:var(--od);padding:3px 12px;border-radius:99px;font-size:.7rem;font-weight:700;}
+    .back-btn{color:var(--muted);text-decoration:none;font-size:.8rem;transition:color .2s;display:flex;align-items:center;gap:5px;}
+    .back-btn:hover{color:var(--orange);}
+
+    /* LAYOUT */
+    .layout{flex:1;display:grid;grid-template-columns:360px 1fr;overflow:hidden;}
+
+    /* LEFT PHONE PANEL */
+    .phone-panel{
+      background:linear-gradient(180deg,#fff7ed 0%,var(--white) 100%);
+      border-right:1px solid var(--border);
+      display:flex;flex-direction:column;align-items:center;
+      justify-content:center;padding:24px 20px;gap:18px;
+      overflow:hidden;
+    }
+    .pp-label{font-size:.65rem;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;font-weight:700;}
+    .phone-wrap{position:relative;}
+    .p-glow{position:absolute;inset:-30px;border-radius:50%;background:radial-gradient(rgba(249,115,22,.12),transparent 70%);pointer-events:none;}
+    .phone{
+      width:220px;
+      background:#0c0c0c;
+      border-radius:38px;
+      border:2px solid rgba(249,115,22,.3);
+      box-shadow:0 24px 60px rgba(0,0,0,.15),0 0 0 1px rgba(255,255,255,.05);
+      overflow:hidden;position:relative;z-index:1;
+      animation:float 5s ease-in-out infinite;
+    }
+    @keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-10px)}}
+    .p-notch{width:60px;height:18px;background:#0c0c0c;border-radius:0 0 10px 10px;margin:0 auto;position:relative;z-index:2;}
+    .p-screen{min-height:420px;position:relative;overflow:hidden;}
+    .screen{position:absolute;inset:0;padding:12px;display:none;flex-direction:column;}
+    .screen.active{display:flex;}
+
+    /* HOME */
+    .s-bar{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;}
+    .s-time{font-size:.7rem;font-weight:700;color:#fff;}
+    .s-offbadge{background:rgba(249,115,22,.2);border:1px solid rgba(249,115,22,.35);color:var(--orange);padding:2px 7px;border-radius:4px;font-size:.5rem;font-weight:700;}
+    .s-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;}
+    .s-greet{font-size:.56rem;color:#aaa;}
+    .s-name{font-size:.82rem;font-weight:800;color:#fff;}
+    .s-av{width:28px;height:28px;border-radius:99px;background:var(--orange);color:#fff;font-weight:800;font-size:.7rem;display:flex;align-items:center;justify-content:center;}
+    .wallet{background:linear-gradient(135deg,#ea580c,#f97316);border-radius:14px;padding:14px;margin-bottom:10px;position:relative;overflow:hidden;}
+    .wallet::before{content:'';position:absolute;top:-20px;right:-20px;width:80px;height:80px;border-radius:50%;background:rgba(255,255,255,.1);}
+    .w-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;}
+    .w-name{font-size:.6rem;font-weight:700;color:rgba(255,255,255,.9);}
+    .w-tag{background:rgba(0,0,0,.2);padding:1px 6px;border-radius:4px;font-size:.48rem;color:#fff;font-weight:700;}
+    .w-lbl{font-size:.5rem;color:rgba(255,255,255,.7);text-transform:uppercase;margin-bottom:3px;}
+    .w-val{font-size:1.1rem;font-weight:900;color:#fff;}
+    .w-bank{font-size:.5rem;color:rgba(255,255,255,.65);margin-top:3px;}
+    .actions{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-bottom:10px;}
+    .act{background:#1a1a1a;border:1px solid #222;border-radius:9px;padding:7px 3px;text-align:center;cursor:pointer;transition:background .15s;}
+    .act:hover{background:#222;}
+    .act-ico{font-size:.9rem;display:block;margin-bottom:2px;}
+    .act-lbl{font-size:.47rem;color:#888;}
+    .tx-title{font-size:.55rem;color:#666;font-weight:700;text-transform:uppercase;letter-spacing:.4px;margin-bottom:7px;}
+    .tx{display:flex;align-items:center;gap:7px;margin-bottom:6px;padding:6px;background:#111;border-radius:8px;cursor:pointer;}
+    .tx-av{width:24px;height:24px;border-radius:7px;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:.62rem;flex-shrink:0;}
+    .tx-info{flex:1;}
+    .tx-nm{font-size:.58rem;font-weight:600;color:#fff;}
+    .tx-tm{font-size:.48rem;color:#666;}
+    .tx-amt{font-size:.6rem;font-weight:800;}
+    .red{color:#f87171;}.grn{color:#4ade80;}
+    .navbar{display:flex;justify-content:space-around;padding:7px 0 3px;border-top:1px solid #1a1a1a;margin-top:auto;}
+    .nb-item{display:flex;flex-direction:column;align-items:center;gap:2px;font-size:.44rem;color:#555;cursor:pointer;padding:3px 6px;border-radius:6px;}
+    .nb-item.active{color:var(--orange);}
+    .nb-item .ni{font-size:.8rem;}
+
+    /* SEND */
+    .s-back{display:flex;align-items:center;gap:8px;margin-bottom:12px;}
+    .back-circle{width:26px;height:26px;border-radius:7px;background:#1a1a1a;border:1px solid #222;display:flex;align-items:center;justify-content:center;font-size:.75rem;cursor:pointer;color:#aaa;}
+    .stitle{font-size:.82rem;font-weight:800;color:#fff;}
+    .inp-group{margin-bottom:9px;}
+    .inp-lbl{font-size:.54rem;color:#777;font-weight:600;text-transform:uppercase;letter-spacing:.3px;margin-bottom:4px;display:block;}
+    .inp{width:100%;background:#111;border:1px solid #222;border-radius:7px;padding:8px 10px;color:#fff;font-size:.72rem;font-family:inherit;outline:none;transition:border-color .2s;}
+    .inp:focus{border-color:var(--orange);}
+    .inp::placeholder{color:#444;}
+    .ussd-box{background:#080808;border:1px solid #1a1a1a;border-radius:7px;padding:9px;font-family:monospace;font-size:.56rem;line-height:1.7;margin-bottom:10px;}
+    .ub-lbl{font-size:.5rem;color:#555;font-weight:700;text-transform:uppercase;margin-bottom:4px;}
+    .ub-cmd{color:#fb923c;}
+    .send-btn{width:100%;padding:10px;background:var(--orange);color:#fff;border:none;border-radius:8px;font-weight:700;font-size:.76rem;cursor:pointer;font-family:inherit;transition:background .15s;}
+    .send-btn:hover{background:var(--od);}
+
+    /* SUCCESS */
+    .success-s{align-items:center;justify-content:center;text-align:center;}
+    .suc-ring{width:56px;height:56px;border-radius:50%;background:rgba(34,197,94,.1);border:2px solid rgba(34,197,94,.25);display:flex;align-items:center;justify-content:center;font-size:1.4rem;margin:0 auto 12px;}
+    .suc-title{font-size:.9rem;font-weight:900;color:#fff;margin-bottom:4px;}
+    .suc-amt{font-size:1.4rem;font-weight:900;color:#4ade80;margin-bottom:6px;}
+    .suc-sub{font-size:.62rem;color:#888;margin-bottom:3px;}
+    .suc-ref{font-size:.54rem;color:#555;font-family:monospace;}
+    .suc-note{font-size:.58rem;color:var(--orange);margin-top:8px;}
+    .done-btn{margin-top:16px;padding:8px 24px;background:var(--orange);color:#fff;border:none;border-radius:7px;font-weight:700;font-size:.72rem;cursor:pointer;font-family:inherit;}
+
+    /* BALANCE */
+    .bal-card{background:linear-gradient(135deg,#ea580c,#f97316);border-radius:12px;padding:16px;text-align:center;margin-bottom:12px;}
+    .bal-lbl{font-size:.55rem;color:rgba(255,255,255,.7);text-transform:uppercase;margin-bottom:5px;}
+    .bal-val{font-size:1.4rem;font-weight:900;color:#fff;}
+    .bal-bank{font-size:.52rem;color:rgba(255,255,255,.65);margin-top:3px;}
+    .bm{background:#111;border:1px solid #1e1e1e;border-radius:9px;padding:10px;display:flex;align-items:center;gap:9px;cursor:pointer;margin-bottom:7px;transition:border-color .15s;}
+    .bm:hover{border-color:rgba(249,115,22,.3);}
+    .bm-ico{font-size:1rem;}
+    .bm-t{font-size:.66rem;font-weight:700;color:#fff;}
+    .bm-s{font-size:.56rem;color:#666;}
+    .bm-cmd{font-family:monospace;font-size:.6rem;color:var(--orange);margin-left:auto;}
+
+    /* QR SCAN */
+    .qr-scan{align-items:center;justify-content:center;text-align:center;}
+    .qr-frame{width:120px;height:120px;border-radius:14px;position:relative;margin:12px auto;display:flex;align-items:center;justify-content:center;}
+    .qr-corner{position:absolute;width:18px;height:18px;}
+    .qr-corner.tl{top:0;left:0;border-top:3px solid var(--orange);border-left:3px solid var(--orange);border-radius:4px 0 0 0;}
+    .qr-corner.tr{top:0;right:0;border-top:3px solid var(--orange);border-right:3px solid var(--orange);border-radius:0 4px 0 0;}
+    .qr-corner.bl{bottom:0;left:0;border-bottom:3px solid var(--orange);border-left:3px solid var(--orange);border-radius:0 0 0 4px;}
+    .qr-corner.br{bottom:0;right:0;border-bottom:3px solid var(--orange);border-right:3px solid var(--orange);border-radius:0 0 4px 0;}
+    .qr-line{position:absolute;height:2px;width:90%;background:linear-gradient(90deg,transparent,var(--orange),transparent);top:50%;animation:scan-line 2s ease-in-out infinite;}
+    @keyframes scan-line{0%{top:20%}50%{top:80%}100%{top:20%}}
+
+    /* STATUS STRIP */
+    .net-strip{display:flex;gap:14px;justify-content:center;flex-wrap:wrap;}
+    .ns{display:flex;align-items:center;gap:5px;font-size:.62rem;color:var(--muted);}
+    .ns .dot{width:6px;height:6px;border-radius:50%;}
+
+    /* RIGHT PANEL */
+    .right-panel{display:flex;flex-direction:column;overflow:hidden;background:var(--white);}
+
+    /* TABS */
+    .tabs{display:flex;border-bottom:1px solid var(--border);padding:0 28px;background:var(--white);}
+    .tab{padding:14px 18px;font-size:.82rem;font-weight:600;color:var(--muted);cursor:pointer;border-bottom:2px solid transparent;transition:all .2s;white-space:nowrap;}
+    .tab:hover{color:var(--text);}
+    .tab.active{color:var(--orange);border-bottom-color:var(--orange);}
+
+    /* CONTROLS */
+    .controls{padding:20px 28px;border-bottom:1px solid var(--border);}
+    .ctrl-title{font-size:.68rem;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:.5px;margin-bottom:14px;}
+    .btns-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;}
+    .demo-btn{
+      padding:10px 12px;background:var(--bg);
+      border:1.5px solid var(--border);border-radius:8px;
+      color:var(--sub);font-size:.76rem;font-weight:600;
+      cursor:pointer;transition:all .15s;font-family:inherit;
+      display:flex;align-items:center;gap:7px;
+    }
+    .demo-btn:hover{background:var(--ol);border-color:var(--om);color:var(--od);}
+    .demo-btn.active-state{background:var(--ol);border-color:var(--orange);color:var(--od);}
+
+    /* LOGS */
+    .logs-wrap{flex:1;overflow-y:auto;padding:16px 28px;}
+    .logs-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;}
+    .logs-title{font-size:.68rem;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:.5px;}
+    .clear-btn{font-size:.68rem;color:var(--muted);background:none;border:1px solid var(--border);padding:3px 10px;border-radius:5px;cursor:pointer;transition:all .15s;}
+    .clear-btn:hover{color:var(--text);border-color:#ccc;}
+    .log{display:flex;gap:10px;margin-bottom:8px;padding:9px 12px;background:var(--bg);border-radius:8px;border-left:2px solid transparent;font-size:.74rem;transition:border-color .15s;}
+    .log:hover{border-left-color:var(--orange);}
+    .log-t{color:var(--muted);font-size:.62rem;flex-shrink:0;margin-top:1px;font-family:monospace;}
+    .log-s{color:var(--orange);font-weight:700;flex-shrink:0;font-family:monospace;}
+    .log-m{color:var(--sub);font-family:monospace;}
+    .log-m .ok{color:var(--green);font-weight:600;}
+    .log-m .warn{color:#d97706;}
+    .log-m .cmd{color:#0284c7;}
+    .log-m .val{color:var(--orange);}
+
+    /* FEATURES PANEL */
+    .features-panel{padding:20px 28px;overflow-y:auto;}
+    .f-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+    .f-card{background:var(--bg);border:1.5px solid var(--border);border-radius:10px;padding:14px;transition:border-color .2s;}
+    .f-card:hover{border-color:var(--om);}
+    .f-card strong{font-size:.78rem;color:var(--text);display:block;margin-bottom:4px;}
+    .f-card span{font-size:.72rem;color:var(--muted);line-height:1.5;}
+
+    /* ARCH PANEL */
+    .arch-panel{padding:20px 28px;overflow-y:auto;}
+    .arch-code{background:var(--bg);border:1.5px solid var(--border);border-radius:10px;padding:18px;font-family:monospace;font-size:.74rem;line-height:1.9;}
+    .ac-title{color:var(--orange);font-weight:700;margin-bottom:10px;display:block;}
+    .ac-step{color:var(--muted);}
+    .ac-val{color:#0284c7;}
+    .ac-ok{color:var(--green);font-weight:600;}
+    .ac-pattern{color:var(--text);}
+
+    /* STATUS BAR */
+    .status-bar{
+      padding:10px 28px;border-top:1px solid var(--border);
+      display:flex;align-items:center;gap:20px;flex-wrap:wrap;
+      background:var(--bg);flex-shrink:0;
+    }
+    .sb{display:flex;align-items:center;gap:6px;font-size:.72rem;}
+    .sb-dot{width:7px;height:7px;border-radius:50%;}
+    .sb-lbl{color:var(--muted);}
+    .sb-val{color:var(--text);font-weight:600;}
+    .sb-ver{font-size:.68rem;color:var(--muted);margin-left:auto;}
+
+    @media(max-width:900px){
+      html,body{overflow:auto;}
+      .layout{grid-template-columns:1fr;overflow:auto;}
+      .phone-panel{height:auto;border-right:none;border-bottom:1px solid var(--border);}
+      .right-panel{overflow:visible;}
+      .logs-wrap{max-height:400px;overflow-y:auto;}
+    }
+    @media(max-width:480px){
+      nav{padding:0 16px;}
+      .controls,.logs-wrap,.features-panel,.arch-panel{padding-left:16px;padding-right:16px;}
+      .btns-grid{grid-template-columns:1fr 1fr;}
+      .f-grid{grid-template-columns:1fr;}
+    }
+  </style>
+</head>
+<body>
+
+<nav>
+  <a href="index.html" class="nav-logo">
+    <div class="nl-icon">
+      <img src="EdgePay_Icon.png" alt="E" onerror="this.style.display='none';this.parentElement.textContent='E'"/>
+    </div>
+    <span class="nl-name">EdgePay</span>
+  </a>
+  <span class="demo-tag">🎮 Interactive Demo</span>
+  <a href="index.html" class="back-btn">← Back to Home</a>
+</nav>
+
+<div class="layout">
+
+  <!-- LEFT: PHONE -->
+  <div class="phone-panel">
+    <span class="pp-label">Live App Simulation</span>
+
+    <div class="phone-wrap">
+      <div class="p-glow"></div>
+      <div class="phone">
+        <div class="p-notch"></div>
+        <div class="p-screen">
+
+          <!-- HOME -->
+          <div class="screen active" id="sc-home">
+            <div class="s-bar">
+              <span class="s-time">9:05</span>
+              <span class="s-offbadge">● OFFLINE</span>
+            </div>
+            <div class="s-head">
+              <div><div class="s-greet">Welcome back,</div><div class="s-name">Nishant 👋</div></div>
+              <div class="s-av">N</div>
+            </div>
+            <div class="wallet">
+              <div class="w-row"><span class="w-name">Edge Wallet</span><span class="w-tag">● WALLET</span></div>
+              <div class="w-lbl">Available Balance</div>
+              <div class="w-val">₹ • • • • • •</div>
+              <div class="w-bank">Linked Bank: SBI · A/c •••• 1234</div>
+            </div>
+            <div class="actions">
+              <div class="act" onclick="showSc('scan')"><span class="act-ico">📷</span><span class="act-lbl">Scan QR</span></div>
+              <div class="act" onclick="showSc('send')"><span class="act-ico">↗️</span><span class="act-lbl">Send</span></div>
+              <div class="act" onclick="showSc('bal')"><span class="act-ico">💰</span><span class="act-lbl">Balance</span></div>
+              <div class="act" onclick="showSc('home')"><span class="act-ico">📒</span><span class="act-lbl">Passbook</span></div>
+            </div>
+            <div class="tx-title">Recent Activity</div>
+            <div class="tx"><div class="tx-av" style="background:rgba(249,115,22,.15);color:var(--orange)">B</div><div class="tx-info"><div class="tx-nm">bhupenderjangra8053</div><div class="tx-tm">↑ Sent · 1h ago</div></div><span class="tx-amt red">−₹1.00</span></div>
+            <div class="tx"><div class="tx-av" style="background:rgba(74,222,128,.1);color:#4ade80">R</div><div class="tx-info"><div class="tx-nm">Rahul Sharma</div><div class="tx-tm">↓ Received · 3h ago</div></div><span class="tx-amt grn">+₹500</span></div>
+            <div class="tx"><div class="tx-av" style="background:rgba(96,165,250,.1);color:#60a5fa">S</div><div class="tx-info"><div class="tx-nm">Shreyansh Dubey</div><div class="tx-tm">↑ Sent · 5h ago</div></div><span class="tx-amt red">−₹5.00</span></div>
+            <div class="navbar">
+              <div class="nb-item active" onclick="showSc('home')"><span class="ni">🏠</span>Home</div>
+              <div class="nb-item" onclick="showSc('send')"><span class="ni">↗️</span>Pay</div>
+              <div class="nb-item" onclick="showSc('scan')"><span class="ni">📷</span>QR</div>
+              <div class="nb-item" onclick="showSc('home')"><span class="ni">👤</span>Profile</div>
+            </div>
+          </div>
+
+          <!-- SEND -->
+          <div class="screen" id="sc-send">
+            <div class="s-back">
+              <div class="back-circle" onclick="showSc('home')">←</div>
+              <span class="stitle">Send Money</span>
+            </div>
+            <div class="inp-group"><label class="inp-lbl">Mobile / UPI ID</label><input class="inp" id="inp-r" placeholder="9876543210 or upi@bank" oninput="upd()"/></div>
+            <div class="inp-group"><label class="inp-lbl">Amount (₹)</label><input class="inp" id="inp-a" type="number" placeholder="200" oninput="upd()"/></div>
+            <div class="inp-group"><label class="inp-lbl">Remark</label><input class="inp" id="inp-rm" placeholder="dinner split" oninput="upd()"/></div>
+            <div class="ussd-box">
+              <div class="ub-lbl">USSD Preview</div>
+              <div class="ub-cmd" id="ussd-prev">*99*1*1*&lt;mobile&gt;*&lt;amount&gt;*&lt;remark&gt;</div>
+            </div>
+            <button class="send-btn" onclick="doSend()">⚡ Send via USSD</button>
+          </div>
+
+          <!-- SCAN -->
+          <div class="screen qr-scan" id="sc-scan">
+            <div class="s-back" style="align-self:flex-start">
+              <div class="back-circle" onclick="showSc('home')">←</div>
+              <span class="stitle">Scan QR</span>
+            </div>
+            <div class="qr-frame">
+              <div class="qr-corner tl"></div><div class="qr-corner tr"></div>
+              <div class="qr-corner bl"></div><div class="qr-corner br"></div>
+              <div class="qr-line"></div>
+              <span style="font-size:2rem">📷</span>
+            </div>
+            <div style="font-size:.62rem;color:#888;margin-bottom:16px">Point at any BHIM UPI QR code</div>
+            <button class="send-btn" style="width:auto;padding:8px 20px" onclick="doScan()">Simulate Scan →</button>
+          </div>
+
+          <!-- BALANCE -->
+          <div class="screen" id="sc-bal">
+            <div class="s-back">
+              <div class="back-circle" onclick="showSc('home')">←</div>
+              <span class="stitle">Check Balance</span>
+            </div>
+            <div class="bal-card">
+              <div class="bal-lbl">Available Balance</div>
+              <div class="bal-val" id="bal-disp">Tap to fetch →</div>
+              <div class="bal-bank">SBI · A/c •••• 1234</div>
+            </div>
+            <div class="bm" onclick="doBalance('ussd')"><span class="bm-ico">📡</span><div><div class="bm-t">USSD Balance</div><div class="bm-s">Works on all carriers</div></div><span class="bm-cmd">*99*3#</span></div>
+            <div class="bm" onclick="doBalance('sms')"><span class="bm-ico">💬</span><div><div class="bm-t">SBI Missed Call</div><div class="bm-s">Send SMS to get balance</div></div><span class="bm-cmd">09223...</span></div>
+          </div>
+
+          <!-- SUCCESS -->
+          <div class="screen success-s" id="sc-success">
+            <div class="suc-ring">✓</div>
+            <div class="suc-title">Payment Sent!</div>
+            <div class="suc-amt" id="suc-amt">₹200.00</div>
+            <div class="suc-sub" id="suc-to">To: 9876543210</div>
+            <div class="suc-ref" id="suc-ref">Ref: SBI240326001234</div>
+            <div class="suc-note">⚡ Confirmed in 2.7s — 0 bytes used</div>
+            <button class="done-btn" onclick="showSc('home')">Done ✓</button>
+          </div>
+
+        </div><!-- p-screen -->
+      </div><!-- phone -->
+    </div>
+
+    <div class="net-strip">
+      <div class="ns"><span class="dot" style="background:#22c55e"></span>GSM Ready</div>
+      <div class="ns"><span class="dot" style="background:var(--orange)"></span>NPCI USSD</div>
+      <div class="ns"><span class="dot" style="background:#22c55e"></span>SMS Engine</div>
+    </div>
+  </div>
+
+  <!-- RIGHT PANEL -->
+  <div class="right-panel">
+
+    <div class="tabs">
+      <div class="tab active" onclick="switchTab('logs',this)">Backend Logs</div>
+      <div class="tab" onclick="switchTab('features',this)">Features</div>
+      <div class="tab" onclick="switchTab('arch',this)">Architecture</div>
+    </div>
+
+    <!-- LOGS TAB -->
+    <div id="tab-logs" style="display:flex;flex-direction:column;flex:1;overflow:hidden;">
+      <div class="controls">
+        <div class="ctrl-title">⚡ Simulate Actions</div>
+        <div class="btns-grid">
+          <button class="demo-btn" onclick="sim('boot')">🔧 Boot Engine</button>
+          <button class="demo-btn" onclick="sim('pay')">💸 Send ₹200</button>
+          <button class="demo-btn" onclick="sim('bal')">💰 Check Balance</button>
+          <button class="demo-btn" onclick="sim('qr')">📷 Scan QR</button>
+          <button class="demo-btn" onclick="sim('sms')">💬 Parse SMS</button>
+          <button class="demo-btn" onclick="sim('pin')">🔐 UPI PIN</button>
+        </div>
+      </div>
+      <div class="logs-wrap" id="logs-container">
+        <div class="logs-head">
+          <span class="logs-title">Console Output</span>
+          <button class="clear-btn" onclick="clearLog()">Clear</button>
+        </div>
+        <div id="logs"></div>
+      </div>
+    </div>
+
+    <!-- FEATURES TAB -->
+    <div id="tab-features" style="display:none;flex:1;">
+      <div class="features-panel">
+        <div class="f-grid">
+          <div class="f-card"><strong>📡 Offline USSD Banking</strong><span>USSD payment layer on India's National USSD Platform. Works on every carrier at 2G speeds.</span></div>
+          <div class="f-card"><strong>💳 Edge Wallet</strong><span>UPI-integrated wallet with PIN verification and locally encrypted transaction state.</span></div>
+          <div class="f-card"><strong>📷 QR Code Scanner</strong><span>VisionCamera + ML Kit. Under 120ms on budget devices. Auto-fills UPI ID and amount.</span></div>
+          <div class="f-card"><strong>💬 SMS Confirmation</strong><span>Dual-path: BroadcastReceiver + inbox polling. 12+ bank regex templates.</span></div>
+          <div class="f-card"><strong>🔒 Masked Dashboard</strong><span>Balances hidden by default. Every sensitive action PIN-protected. OWASP MASVS-CRYPTO.</span></div>
+          <div class="f-card"><strong>📱 3 Home Widgets</strong><span>Home Status (4×1) · Savings Goal (2×2) · Expense Tracker (2×2). All local data.</span></div>
+          <div class="f-card"><strong>💼 Salary Engine</strong><span>Set monthly budget. Auto-deduction scans transactions and updates balance in real-time.</span></div>
+          <div class="f-card"><strong>🌍 8 Languages</strong><span>Hindi · Marathi · Urdu RTL · Punjabi · Bengali · Kannada · Odia · English</span></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ARCH TAB -->
+    <div id="tab-arch" style="display:none;flex:1;">
+      <div class="arch-panel">
+        <div class="arch-code">
+          <span class="ac-title">Payment Flow — USSDBuilder.ts → Kotlin Bridge</span>
+          <div><span class="ac-step">1 &nbsp;</span><span>UPI VPA Validated</span></div>
+          <div><span class="ac-step">2 &nbsp;</span><span>USSDBuilder constructs *99# string</span></div>
+          <div><span class="ac-step">3 &nbsp;</span><span>UssdModule.kt dispatches GSM call</span></div>
+          <div><span class="ac-step">4 &nbsp;</span><span>NPCI NUUP handshake + TXN</span></div>
+          <div><span class="ac-step">5 &nbsp;</span><span>SmsParser.ts matches debit alert</span></div>
+          <div><span class="ac-step">6 &nbsp;</span><span class="ac-ok">Payment confirmed · PIN zeroed ✓</span></div>
+          <br/>
+          <span class="ac-title">SmsParser.ts — Multi-Bank Regex</span>
+          <div><span style="color:var(--muted)">// SBI</span></div>
+          <div class="ac-pattern">/INR\s?([\d,]+\.?\d*)\s+debited/i</div>
+          <div><span style="color:var(--muted)">// HDFC</span></div>
+          <div class="ac-pattern">/Rs\.?\s?([\d,]+\.?\d*)\s+debited/i</div>
+          <div><span style="color:var(--muted)">// Generic UPI</span></div>
+          <div class="ac-pattern">/UPI\/(\w+)\s+Ref:\s*(\w+)/i</div>
+          <br/>
+          <div class="ac-ok">→ Output: { amount, bank, txnRef, timestamp }</div>
+          <div class="ac-ok">✓ Parsed in &lt;5ms</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="status-bar">
+      <div class="sb"><div class="sb-dot" style="background:#22c55e"></div><span class="sb-lbl">GSM Radio</span><span class="sb-val">READY</span></div>
+      <div class="sb"><div class="sb-dot" style="background:var(--orange);animation:p 2s infinite"></div><span class="sb-lbl">NPCI GW</span><span class="sb-val">IDLE</span></div>
+      <div class="sb"><div class="sb-dot" style="background:#22c55e"></div><span class="sb-lbl">SMS Engine</span><span class="sb-val">ONLINE</span></div>
+      <span class="sb-ver">engine v2.0.0</span>
+    </div>
+  </div>
+</div>
+
+<style>@keyframes p{0%,100%{opacity:1}50%{opacity:.3}}</style>
+
+<script>
+  function showSc(id){document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));document.getElementById('sc-'+id).classList.add('active');}
+
+  function switchTab(n,el){
+    document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));el.classList.add('active');
+    document.getElementById('tab-logs').style.display=n==='logs'?'flex':'none';
+    document.getElementById('tab-features').style.display=n==='features'?'flex':'none';
+    document.getElementById('tab-arch').style.display=n==='arch'?'flex':'none';
+    if(n==='logs'){document.getElementById('tab-logs').style.flexDirection='column';}
+  }
+
+  function addLog(sys,msg){
+    const now=new Date(),t=`${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}:${String(now.getSeconds()).padStart(2,'0')}`;
+    const el=document.createElement('div');el.className='log';
+    el.innerHTML=`<span class="log-t">${t}</span><span class="log-s">${sys}</span><span class="log-m">${msg}</span>`;
+    document.getElementById('logs').appendChild(el);
+    document.getElementById('logs-container').scrollTop=9999;
+  }
+  function clearLog(){document.getElementById('logs').innerHTML='';}
+
+  function sim(a){
+    switchTab('logs',document.querySelector('.tab'));
+    if(a==='boot'){
+      const lines=[
+        ['SYS','<span class="cmd">engine_boot_v2</span>'],
+        ['SYS','EdgePay v2.0.0 — Offline Financial Engine'],
+        ['SYS','USSD bridge: <span class="ok">UssdModule.kt loaded</span>'],
+        ['SYS','SMS parser: <span class="ok">12 bank templates ready</span>'],
+        ['SYS','SBI: <span class="val">SMS → 09223766666</span>'],
+        ['SYS','HDFC: <span class="val">USSD *99*3#</span>'],
+        ['SYS','QR engine: <span class="val">VisionCamera + ML Kit</span>'],
+        ['SYS','Zustand: <span class="ok">offline state sync ready</span>'],
+        ['SYS','8 languages: <span class="ok">loaded</span>'],
+        ['SYS','OWASP MASVS: <span class="ok">PIN zeroing enabled</span>'],
+        ['SYS','<span class="ok">✓ System ready — 0 bytes internet used</span>'],
+      ];
+      lines.forEach((l,i)=>setTimeout(()=>addLog(l[0],l[1]),i*110));
+      return;
+    }
+    if(a==='pay'){
+      addLog('edge','<span class="cmd">initiate_payment</span>');
+      setTimeout(()=>addLog('ussd','→ recipient: <span class="val">9876543210</span> · amount: <span class="val">₹200</span>'),200);
+      setTimeout(()=>addLog('ussd','<span class="cmd">build_string</span>: <span class="val">*99*1*1*9876543210*200*demo</span>'),500);
+      setTimeout(()=>addLog('tel ','<span class="cmd">ACTION_CALL</span> → GSM session opened'),900);
+      setTimeout(()=>addLog('tel ','NPCI: <span class="ok">TXN_SUCCESS</span>'),1500);
+      setTimeout(()=>addLog('sms ','debit alert parsed: <span class="val">₹200</span> · ref: <span class="val">SBI240326001234</span>'),1900);
+      setTimeout(()=>addLog('bal ','<span class="ok">✓ Confirmed in 2.7s — 0 bytes data used</span>'),2200);
+      setTimeout(()=>{showSc('success');document.getElementById('suc-amt').textContent='₹200.00';document.getElementById('suc-to').textContent='To: 9876543210';},2300);
+      return;
+    }
+    if(a==='bal'){
+      addLog('bal ','<span class="cmd">check_balance</span> via USSD');
+      setTimeout(()=>addLog('tel ','dial: <span class="val">*99*3#</span>'),300);
+      setTimeout(()=>addLog('tel ','GSM → NPCI → Bank'),700);
+      setTimeout(()=>addLog('sms ','<span class="ok">Balance: ₹12,450.00</span>'),1200);
+      setTimeout(()=>{showSc('bal');document.getElementById('bal-disp').textContent='₹12,450.00';},1300);
+      return;
+    }
+    if(a==='qr'){
+      addLog('qr  ','<span class="cmd">start_scanner</span> · VisionCamera 30fps');
+      setTimeout(()=>addLog('qr  ','ML Kit native thread decoding...'),400);
+      setTimeout(()=>addLog('qr  ','QR: <span class="val">upi://pay?pa=merchant@sbi&am=500</span>'),800);
+      setTimeout(()=>addLog('qr  ','<span class="ok">✓ Decoded in 118ms</span>'),1000);
+      setTimeout(()=>{showSc('send');document.getElementById('inp-r').value='merchant@sbi';document.getElementById('inp-a').value='500';document.getElementById('inp-rm').value='QR payment';upd();},1100);
+      return;
+    }
+    if(a==='sms'){
+      addLog('sms ','<span class="cmd">parse_sms</span> · testing 12 patterns');
+      setTimeout(()=>addLog('sms ','input: "INR 200.00 debited from SBI A/c"'),300);
+      setTimeout(()=>addLog('sms ','pattern[0] SBI: <span class="ok">MATCH</span>'),600);
+      setTimeout(()=>addLog('sms ','<span class="val">{ amount: 200, bank: "SBI", txnRef: "SBI240326001234" }</span>'),900);
+      setTimeout(()=>addLog('sms ','<span class="ok">✓ Parsed in 4ms</span>'),1100);
+      return;
+    }
+    if(a==='pin'){
+      addLog('pin ','<span class="cmd">handle_upi_pin</span> → native capture');
+      setTimeout(()=>addLog('pin ','passed to <span class="val">UssdModule.kt</span> — never stored in JS'),400);
+      setTimeout(()=>addLog('pin ','<span class="cmd">Arrays.fill(pinArray, 0)</span> → zeroed from heap'),800);
+      setTimeout(()=>addLog('pin ','<span class="ok">✓ OWASP MASVS-CRYPTO compliant</span>'),1100);
+    }
+  }
+
+  function upd(){
+    const r=document.getElementById('inp-r').value||'<mobile>';
+    const a=document.getElementById('inp-a').value||'<amount>';
+    const rm=document.getElementById('inp-rm').value||'<remark>';
+    document.getElementById('ussd-prev').textContent=`*99*1*1*${r}*${a}*${rm}`;
+  }
+
+  function doSend(){
+    const r=document.getElementById('inp-r').value||'9876543210';
+    const a=document.getElementById('inp-a').value||'200';
+    document.getElementById('suc-amt').textContent=`₹${a}.00`;
+    document.getElementById('suc-to').textContent=`To: ${r}`;
+    document.getElementById('suc-ref').textContent=`Ref: SBI${Date.now().toString().slice(-10)}`;
+    showSc('success');
+    addLog('edge',`<span class="cmd">payment</span> · ₹${a} → ${r}`);
+    setTimeout(()=>addLog('tel','GSM dial → <span class="ok">TXN_SUCCESS</span>'),900);
+    setTimeout(()=>addLog('sms',`<span class="ok">✓ ₹${a} confirmed — 0 bytes</span>`),1400);
+  }
+
+  function doScan(){
+    showSc('send');
+    document.getElementById('inp-r').value='demo@sbi';
+    document.getElementById('inp-a').value='500';
+    document.getElementById('inp-rm').value='QR payment';
+    upd();
+    addLog('qr  ','<span class="ok">✓ QR decoded: demo@sbi · ₹500 · 118ms</span>');
+  }
+
+  function doBalance(m){
+    addLog('bal ',`check via ${m==='ussd'?'*99*3#':'SMS 09223766666'}`);
+    setTimeout(()=>{addLog('sms ','<span class="ok">Balance: ₹12,450.00</span>');document.getElementById('bal-disp').textContent='₹12,450.00';},1200);
+  }
+
+  window.addEventListener('load',()=>setTimeout(()=>sim('boot'),500));
+</script>
+</body>
+</html>
